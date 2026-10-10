@@ -1,6 +1,4 @@
-# GeniusIDE
-
-# GeniusIDE
+# GeniusIDE [made by cobalt studios]
 
 ![Version](https://img.shields.io/badge/version-1.0.0-blue.svg)
 ![Platform](https://img.shields.io/badge/platform-Windows%20%7C%20macOS%20%7C%20Linux-lightgrey.svg)
@@ -45,7 +43,7 @@
 * **Permitted:** Installing and running GeniusIDE for personal, educational, or commercial software development.
 * **Prohibited:** Modifying, decompiling, reverse engineering, disassembling, or redistributing GeniusIDE binaries or assets.
 
-For full terms and conditions, refer to the [LICENSE / EULA](./LICENSE) included with this software.
+For full terms and conditions, refer to [LICENSE.md](./LICENSE.md).
 
 ---
 
