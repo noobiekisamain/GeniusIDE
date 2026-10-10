@@ -1,0 +1,12 @@
+# Dependencies
+node_modules/
+.pnpm-store/
+
+# Packaging Output
+dist/
+out/
+
+# OS / Environment Files
+.DS_Store
+*.log
+.env
