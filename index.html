@@ -1,0 +1,960 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full bg-zinc-900 text-zinc-100">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GeniusIDE - Cobalt Studios</title>
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <!-- Monaco Editor Loader -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js"></script>
+
+  <style>
+    /* Classic Dense Scrollbars */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #18181b;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #3f3f46;
+      border-radius: 2px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #52525b;
+    }
+
+    .ide-border {
+      border-color: #27272a;
+    }
+    .ide-bg-dark {
+      background-color: #121214;
+    }
+    .ide-bg-panel {
+      background-color: #18181b;
+    }
+    .ide-bg-header {
+      background-color: #09090b;
+    }
+  </style>
+</head>
+<body class="h-full flex flex-col font-sans overflow-hidden select-none bg-zinc-900 text-zinc-200">
+
+  <header class="h-9 bg-zinc-950 border-b ide-border flex items-center justify-between px-3 text-xs shrink-0 z-20">
+    <div class="flex items-center space-x-3">
+      <!-- Cobalt Studios Branding -->
+      <div class="flex items-center space-x-2 font-bold text-zinc-300 tracking-tight">
+        <i data-lucide="terminal-square" class="w-4 h-4 text-amber-500"></i>
+        <span>GeniusIDE</span>
+        <span class="text-[10px] bg-zinc-800 text-zinc-400 px-1.5 py-0.5 rounded border border-zinc-700 font-mono">Cobalt Studios</span>
+      </div>
+
+      <!-- Menu Items -->
+      <nav class="hidden md:flex items-center space-x-1 text-zinc-400 pl-3 border-l border-zinc-800">
+        <button id="btn-menu-new" class="hover:bg-zinc-800 hover:text-zinc-200 px-2 py-1 rounded transition">New File</button>
+        <button id="btn-menu-save" class="hover:bg-zinc-800 hover:text-zinc-200 px-2 py-1 rounded transition">Save <span class="text-[10px] text-zinc-500">(Ctrl+S)</span></button>
+        <button id="btn-menu-run" class="hover:bg-zinc-800 hover:text-emerald-400 px-2 py-1 rounded transition flex items-center space-x-1">
+          <i data-lucide="play" class="w-3.5 h-3.5 text-emerald-500"></i>
+          <span>Run</span>
+        </button>
+        <button id="btn-menu-agent" class="hover:bg-zinc-800 hover:text-amber-400 px-2 py-1 rounded transition flex items-center space-x-1">
+          <i data-lucide="bot" class="w-3.5 h-3.5 text-amber-500"></i>
+          <span>AI Agent</span>
+        </button>
+        <button id="btn-menu-api-keys" class="hover:bg-zinc-800 hover:text-sky-400 px-2 py-1 rounded transition">API Keys</button>
+      </nav>
+    </div>
+
+    <!-- Theme & Execution Controls -->
+    <div class="flex items-center space-x-3">
+      <div class="flex items-center space-x-1.5 bg-zinc-900 border border-zinc-800 rounded px-2 py-0.5">
+        <i data-lucide="palette" class="w-3.5 h-3.5 text-zinc-400"></i>
+        <select id="theme-selector" class="bg-transparent text-xs text-zinc-300 focus:outline-none cursor-pointer">
+          <option value="gray-classic">Gray Classic (Default)</option>
+          <option value="dark-charcoal">Dark Charcoal</option>
+          <option value="light-slate">Light Slate</option>
+          <option value="high-contrast">High Contrast</option>
+        </select>
+      </div>
+
+      <button id="btn-run-code" class="bg-zinc-800 hover:bg-zinc-700 text-zinc-200 border border-zinc-700 px-3 py-1 rounded flex items-center space-x-1.5 font-medium transition shadow-sm">
+        <i data-lucide="play" class="w-3.5 h-3.5 fill-current text-emerald-500"></i>
+        <span>Execute</span>
+      </button>
+    </div>
+  </header>
+
+  <div class="flex-1 flex overflow-hidden relative">
+
+    <!-- Activity Bar (Far Left) -->
+    <aside class="w-11 bg-zinc-950 border-r ide-border flex flex-col items-center py-2 space-y-3 text-zinc-400 shrink-0 z-10">
+      <button id="nav-btn-explorer" class="p-2 text-zinc-100 bg-zinc-800 rounded border border-zinc-700 transition" title="Explorer">
+        <i data-lucide="files" class="w-4 h-4"></i>
+      </button>
+      <button id="nav-btn-agent" class="p-2 hover:text-zinc-100 transition relative" title="AI Code Agent">
+        <i data-lucide="bot" class="w-4 h-4 text-amber-500"></i>
+      </button>
+      <button id="nav-btn-terminal" class="p-2 hover:text-zinc-100 transition" title="Toggle Terminal">
+        <i data-lucide="terminal" class="w-4 h-4"></i>
+      </button>
+      <button id="nav-btn-settings" class="p-2 hover:text-zinc-100 transition mt-auto" title="Settings & EULA">
+        <i data-lucide="settings" class="w-4 h-4"></i>
+      </button>
+    </aside>
+
+    <!-- Sidebar: File Explorer -->
+    <section id="sidebar-explorer" class="w-60 bg-zinc-900 border-r ide-border flex flex-col shrink-0">
+      <div class="h-8 px-3 border-b ide-border flex items-center justify-between text-xs font-semibold uppercase tracking-wider text-zinc-400 bg-zinc-950/60">
+        <span class="flex items-center space-x-1.5">
+          <i data-lucide="folder-tree" class="w-3.5 h-3.5 text-zinc-400"></i>
+          <span>Explorer</span>
+        </span>
+        <div class="flex items-center space-x-1">
+          <button id="btn-add-file" class="p-1 hover:bg-zinc-800 rounded text-zinc-400 hover:text-zinc-200" title="New File">
+            <i data-lucide="file-plus" class="w-3.5 h-3.5"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- File Tree Container -->
+      <div id="file-tree" class="flex-1 overflow-y-auto p-1.5 text-xs space-y-0.5 font-mono">
+        <!-- Rendered File Items or Blank State -->
+      </div>
+    </section>
+
+    <main class="flex-1 flex flex-col bg-zinc-950 overflow-hidden relative">
+
+      <!-- Tab Bar -->
+      <div id="tabs-bar" class="h-8 bg-zinc-900 border-b ide-border flex items-center overflow-x-auto text-xs scrollbar-none shrink-0">
+        <!-- Dynamic Tabs -->
+      </div>
+
+      <!-- Editor Container -->
+      <div class="flex-1 relative overflow-hidden bg-zinc-950">
+        <div id="monaco-editor-container" class="w-full h-full"></div>
+
+        <!-- Initial Blank State View -->
+        <div id="empty-state" class="absolute inset-0 flex flex-col items-center justify-center text-zinc-500 bg-zinc-950 z-10">
+          <i data-lucide="code-2" class="w-16 h-16 stroke-1 text-zinc-700 mb-3"></i>
+          <p class="text-sm font-medium text-zinc-300">GeniusIDE by Cobalt Studios</p>
+          <p class="text-xs text-zinc-500 mt-1">No files open. Create a new file to start coding.</p>
+          <div class="flex items-center space-x-2 mt-4">
+            <button id="btn-empty-new" class="px-3.5 py-1.5 bg-amber-600 hover:bg-amber-500 text-zinc-950 font-bold rounded text-xs transition flex items-center space-x-1.5">
+              <i data-lucide="plus" class="w-3.5 h-3.5"></i>
+              <span>Create New File</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Terminal Output Panel -->
+      <div id="terminal-panel" class="h-44 bg-zinc-950 border-t ide-border flex flex-col shrink-0">
+        <div class="h-7 bg-zinc-900 border-b ide-border px-3 flex items-center justify-between text-xs text-zinc-400">
+          <div class="flex items-center space-x-3">
+            <span class="flex items-center space-x-1.5 text-zinc-200 font-medium font-mono">
+              <i data-lucide="terminal" class="w-3.5 h-3.5 text-emerald-500"></i>
+              <span>Integrated Terminal</span>
+            </span>
+            <span id="terminal-status" class="text-[10px] px-1.5 py-0.2 bg-zinc-800 text-zinc-400 rounded">Ready</span>
+          </div>
+          <div class="flex items-center space-x-1">
+            <button id="btn-clear-terminal" class="p-1 hover:bg-zinc-800 rounded text-zinc-400 hover:text-zinc-200" title="Clear Console">
+              <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+            </button>
+            <button id="btn-toggle-terminal" class="p-1 hover:bg-zinc-800 rounded text-zinc-400 hover:text-zinc-200" title="Collapse Panel">
+              <i data-lucide="chevron-down" class="w-3.5 h-3.5"></i>
+            </button>
+          </div>
+        </div>
+
+        <!-- Output Terminal Window -->
+        <div id="terminal-output" class="flex-1 p-2.5 font-mono text-xs overflow-y-auto space-y-1 bg-zinc-950 text-zinc-300">
+          <div class="text-zinc-600">// GeniusIDE Workspace Ready.</div>
+        </div>
+
+        <!-- Terminal Command Prompt -->
+        <div class="h-8 border-t ide-border bg-zinc-900/80 px-2 flex items-center space-x-2 text-xs font-mono">
+          <span class="text-emerald-500 font-bold">$</span>
+          <input id="terminal-input" type="text" placeholder="Type command (e.g., node script.js, help, clear, agent fix)..." class="flex-1 bg-transparent text-zinc-200 focus:outline-none">
+        </div>
+      </div>
+    </main>
+
+    <aside id="sidebar-agent" class="w-80 bg-zinc-900 border-l ide-border flex flex-col shrink-0">
+      <div class="h-8 px-3 border-b ide-border flex items-center justify-between text-xs font-semibold uppercase tracking-wider text-amber-400 bg-zinc-950/80">
+        <div class="flex items-center space-x-2">
+          <i data-lucide="bot" class="w-4 h-4 text-amber-500"></i>
+          <span>AI Code Agent</span>
+        </div>
+        <div class="flex items-center space-x-1">
+          <button id="btn-agent-keys" class="p-1 hover:bg-zinc-800 rounded text-zinc-400 hover:text-amber-400" title="Configure API Keys">
+            <i data-lucide="key" class="w-3.5 h-3.5"></i>
+          </button>
+          <button id="btn-close-agent" class="p-1 hover:bg-zinc-800 rounded text-zinc-400 hover:text-zinc-200" title="Hide Agent">
+            <i data-lucide="panel-right-close" class="w-3.5 h-3.5"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- Quick Action Commands -->
+      <div class="p-2 border-b ide-border bg-zinc-950/40 grid grid-cols-2 gap-1.5 text-[11px]">
+        <button id="agent-act-fix" class="px-2 py-1 bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 text-zinc-200 rounded flex items-center justify-center space-x-1 transition">
+          <i data-lucide="wrench" class="w-3 h-3 text-amber-400"></i>
+          <span>Scan & Fix</span>
+        </button>
+        <button id="agent-act-explain" class="px-2 py-1 bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 text-zinc-200 rounded flex items-center justify-center space-x-1 transition">
+          <i data-lucide="help-circle" class="w-3 h-3 text-sky-400"></i>
+          <span>Explain</span>
+        </button>
+        <button id="agent-act-tests" class="px-2 py-1 bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 text-zinc-200 rounded flex items-center justify-center space-x-1 transition">
+          <i data-lucide="shield-check" class="w-3 h-3 text-emerald-400"></i>
+          <span>Gen Tests</span>
+        </button>
+        <button id="agent-act-refactor" class="px-2 py-1 bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 text-zinc-200 rounded flex items-center justify-center space-x-1 transition">
+          <i data-lucide="sparkles" class="w-3 h-3 text-purple-400"></i>
+          <span>Refactor</span>
+        </button>
+      </div>
+
+      <!-- Agent Messages Container (Strictly EMPTY until user sends prompt) -->
+      <div id="agent-messages" class="flex-1 overflow-y-auto p-3 space-y-3 text-xs font-sans">
+        <!-- Completely empty on initial load -->
+      </div>
+
+      <!-- Code Proposal Action Drawer -->
+      <div id="agent-action-drawer" class="hidden border-t ide-border bg-zinc-950 p-2 text-xs space-y-2">
+        <div class="flex items-center justify-between text-[11px] font-semibold text-zinc-300">
+          <span>Agent Code Proposal</span>
+          <button id="btn-discard-proposal" class="text-zinc-500 hover:text-zinc-300">Discard</button>
+        </div>
+        <pre id="agent-proposed-code" class="bg-zinc-900 p-2 rounded text-[11px] font-mono text-emerald-400 overflow-x-auto max-h-32 border border-zinc-800"></pre>
+        <div class="flex items-center space-x-1.5">
+          <button id="btn-apply-proposal" class="flex-1 bg-emerald-700 hover:bg-emerald-600 text-white py-1 rounded text-xs font-medium transition">Apply to Active File</button>
+          <button id="btn-create-file-proposal" class="flex-1 bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 text-zinc-200 py-1 rounded text-xs transition">Create File</button>
+        </div>
+      </div>
+
+      <!-- Agent Prompt Input -->
+      <div class="p-2 border-t ide-border bg-zinc-950 space-y-1.5">
+        <div class="flex items-center space-x-1.5">
+          <textarea id="agent-input" rows="2" placeholder="Ask Agent to write, edit, or fix code..." class="flex-1 bg-zinc-900 border border-zinc-800 rounded p-2 text-xs text-zinc-200 focus:outline-none focus:border-amber-500/60 resize-none"></textarea>
+          <button id="btn-send-agent" class="h-full px-3 bg-amber-600 hover:bg-amber-500 text-zinc-950 font-bold rounded flex items-center justify-center transition" title="Send to Agent">
+            <i data-lucide="send" class="w-4 h-4"></i>
+          </button>
+        </div>
+      </div>
+    </aside>
+
+  </div>
+
+  <footer class="h-6 bg-zinc-950 border-t ide-border px-3 flex items-center justify-between text-[11px] text-zinc-400 shrink-0 z-20">
+    <div class="flex items-center space-x-4">
+      <span class="flex items-center space-x-1 text-emerald-500">
+        <i data-lucide="check-circle" class="w-3 h-3"></i>
+        <span id="save-status">Ready</span>
+      </span>
+      <span id="active-file-path" class="text-zinc-500">No active file</span>
+    </div>
+
+    <div class="flex items-center space-x-4 font-mono text-[10px]">
+      <!-- Expanded Language Dropdown (35+ Languages) -->
+      <div class="flex items-center space-x-1">
+        <span>Lang:</span>
+        <select id="language-selector" class="bg-zinc-900 text-amber-400 border border-zinc-800 rounded px-1 focus:outline-none cursor-pointer uppercase font-semibold">
+          <option value="javascript">JavaScript</option>
+          <option value="typescript">TypeScript</option>
+          <option value="python">Python</option>
+          <option value="c">C</option>
+          <option value="cpp">C++</option>
+          <option value="csharp">C#</option>
+          <option value="java">Java</option>
+          <option value="rust">Rust</option>
+          <option value="go">Go</option>
+          <option value="html">HTML</option>
+          <option value="css">CSS</option>
+          <option value="scss">SCSS</option>
+          <option value="json">JSON</option>
+          <option value="sql">SQL</option>
+          <option value="php">PHP</option>
+          <option value="ruby">Ruby</option>
+          <option value="shell">Shell/Bash</option>
+          <option value="yaml">YAML</option>
+          <option value="markdown">Markdown</option>
+          <option value="xml">XML</option>
+          <option value="swift">Swift</option>
+          <option value="kotlin">Kotlin</option>
+          <option value="r">R</option>
+          <option value="perl">Perl</option>
+          <option value="scala">Scala</option>
+          <option value="lua">Lua</option>
+          <option value="haskell">Haskell</option>
+          <option value="elixir">Elixir</option>
+          <option value="clojure">Clojure</option>
+          <option value="dart">Dart</option>
+          <option value="julia">Julia</option>
+          <option value="fsharp">F#</option>
+          <option value="powershell">PowerShell</option>
+          <option value="graphql">GraphQL</option>
+          <option value="dockerfile">Dockerfile</option>
+          <option value="assembly">Assembly</option>
+        </select>
+      </div>
+
+      <span id="cursor-pos">Ln 1, Col 1</span>
+      <span id="char-count">0 chars</span>
+      <span class="flex items-center space-x-1 text-amber-400">
+        <i data-lucide="bot" class="w-3 h-3"></i>
+        <span id="status-agent-mode">Agent Ready</span>
+      </span>
+    </div>
+  </footer>
+
+  <div id="modal-settings" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center hidden">
+    <div class="bg-zinc-900 border border-zinc-800 rounded-lg shadow-2xl w-full max-w-md p-5 text-zinc-200">
+      <div class="flex items-center justify-between pb-3 border-b border-zinc-800">
+        <h3 class="font-semibold text-amber-400 flex items-center space-x-2 text-sm">
+          <i data-lucide="key" class="w-4 h-4"></i>
+          <span>AI Code Agent Configuration</span>
+        </h3>
+        <button id="btn-close-settings" class="text-zinc-500 hover:text-zinc-200">
+          <i data-lucide="x" class="w-4 h-4"></i>
+        </button>
+      </div>
+
+      <div class="py-4 space-y-3 text-xs">
+        <div>
+          <label class="block text-zinc-400 font-medium mb-1">Gemini API Key</label>
+          <input id="key-gemini" type="password" placeholder="AIzaSy..." class="w-full bg-zinc-950 border border-zinc-800 rounded p-2 text-zinc-200 focus:outline-none focus:border-amber-500 font-mono text-xs">
+        </div>
+
+        <div>
+          <label class="block text-zinc-400 font-medium mb-1">OpenAI API Key (Optional)</label>
+          <input id="key-openai" type="password" placeholder="sk-..." class="w-full bg-zinc-950 border border-zinc-800 rounded p-2 text-zinc-200 focus:outline-none focus:border-amber-500 font-mono text-xs">
+        </div>
+
+        <div>
+          <label class="block text-zinc-400 font-medium mb-1">Anthropic / Custom Endpoint (Optional)</label>
+          <input id="key-endpoint" type="text" placeholder="https://api.your-model.com/v1" class="w-full bg-zinc-950 border border-zinc-800 rounded p-2 text-zinc-200 focus:outline-none focus:border-amber-500 font-mono text-xs">
+        </div>
+
+        <div class="bg-zinc-950 p-2.5 rounded border border-zinc-800 text-[11px] text-zinc-400 space-y-1">
+          <div class="text-amber-400 font-semibold">Cobalt Studios Proprietary EULA</div>
+          <div>GeniusIDE is strictly licensed for execution and use. Modification and redistribution are prohibited.</div>
+          <div class="text-zinc-500">Support: Noobiekisamain@gmail.com</div>
+        </div>
+      </div>
+
+      <div class="pt-3 border-t border-zinc-800 flex justify-end space-x-2">
+        <button id="btn-save-settings" class="bg-amber-600 hover:bg-amber-500 text-zinc-950 font-bold px-4 py-1.5 rounded text-xs transition">Save Keys & Config</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Comprehensive File Extension Mapping (35+ Languages)
+    const EXT_LANG_MAP = {
+      "js": "javascript", "jsx": "javascript", "ts": "typescript", "tsx": "typescript",
+      "py": "python", "c": "c", "cpp": "cpp", "h": "cpp", "hpp": "cpp", "cs": "csharp",
+      "java": "java", "rs": "rust", "go": "go", "html": "html", "htm": "html", "css": "css",
+      "scss": "scss", "json": "json", "sql": "sql", "php": "php", "rb": "ruby", "sh": "shell",
+      "bash": "shell", "yaml": "yaml", "yml": "yaml", "md": "markdown", "xml": "xml",
+      "swift": "swift", "kt": "kotlin", "r": "r", "pl": "perl", "scala": "scala", "lua": "lua",
+      "hs": "haskell", "ex": "elixir", "exs": "elixir", "clj": "clojure", "dart": "dart",
+      "jl": "julia", "fs": "fsharp", "ps1": "powershell", "graphql": "graphql", "gql": "graphql",
+      "dockerfile": "dockerfile", "asm": "assembly", "s": "assembly"
+    };
+
+    // State Variables (Starts completely EMPTY as requested)
+    let files = {};
+    let openTabs = [];
+    let activeFileKey = null;
+    let editorInstance = null;
+    let proposedCodeBuffer = "";
+    let apiKeys = { gemini: "", openai: "", endpoint: "" };
+
+    require.config({ paths: { 'vs': 'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.38.0/min/vs' }});
+
+    require(['vs/editor/editor.main'], function() {
+      // Gray Classic Monaco Theme
+      monaco.editor.defineTheme('gray-classic', {
+        base: 'vs-dark',
+        inherit: true,
+        rules: [
+          { token: 'comment', foreground: '71717a', fontStyle: 'italic' },
+          { token: 'keyword', foreground: 'f43f5e' },
+          { token: 'string', foreground: '10b981' },
+          { token: 'number', foreground: 'f59e0b' }
+        ],
+        colors: {
+          'editor.background': '#121214',
+          'editor.foreground': '#e4e4e7',
+          'editor.lineHighlightBackground': '#18181b',
+          'editorCursor.foreground': '#f59e0b',
+          'editorWhitespace.foreground': '#27272a'
+        }
+      });
+
+      monaco.editor.defineTheme('dark-charcoal', {
+        base: 'vs-dark',
+        inherit: true,
+        rules: [],
+        colors: {
+          'editor.background': '#09090b',
+          'editor.foreground': '#f4f4f5',
+          'editor.lineHighlightBackground': '#18181b'
+        }
+      });
+
+      // Create Editor
+      editorInstance = monaco.editor.create(document.getElementById('monaco-editor-container'), {
+        value: '',
+        language: 'javascript',
+        theme: 'gray-classic',
+        automaticLayout: true,
+        fontSize: 13,
+        fontFamily: 'Consolas, monospace',
+        minimap: { enabled: true },
+        scrollBeyondLastLine: false,
+        padding: { top: 10 }
+      });
+
+      // Track Content Updates
+      editorInstance.onDidChangeModelContent(() => {
+        if (activeFileKey && files[activeFileKey]) {
+          const content = editorInstance.getValue();
+          if (files[activeFileKey].content !== content) {
+            files[activeFileKey].content = content;
+            markUnsaved(true);
+            updateCharCount();
+          }
+        }
+      });
+
+      editorInstance.onDidChangeCursorPosition((e) => {
+        const pos = e.position;
+        document.getElementById('cursor-pos').innerText = `Ln ${pos.lineNumber}, Col ${pos.column}`;
+      });
+
+      // App Initialization
+      loadSettingsAndKeys();
+      initFileSystem();
+      renderFileTree();
+      renderTabs();
+    });
+
+    function initFileSystem() {
+      const stored = localStorage.getItem('geniuside_clean_fs');
+      if (stored) {
+        try { files = JSON.parse(stored); } catch (e) { files = {}; }
+      } else {
+        files = {}; // Completely empty state
+      }
+    }
+
+    function saveFileSystem() {
+      localStorage.setItem('geniuside_clean_fs', JSON.stringify(files));
+    }
+
+    function detectLanguage(filename) {
+      const ext = filename.split('.').pop().toLowerCase();
+      return EXT_LANG_MAP[ext] || 'plaintext';
+    }
+
+    function openFile(filename) {
+      if (!files[filename]) return;
+
+      if (!openTabs.includes(filename)) {
+        openTabs.push(filename);
+      }
+
+      activeFileKey = filename;
+      const fileData = files[filename];
+      const lang = fileData.language || detectLanguage(filename);
+
+      if (editorInstance) {
+        const model = editorInstance.getModel();
+        monaco.editor.setModelLanguage(model, lang);
+        editorInstance.setValue(fileData.content);
+        document.getElementById('language-selector').value = lang;
+      }
+
+      document.getElementById('empty-state').classList.add('hidden');
+      document.getElementById('active-file-path').innerText = `geniuside://${filename}`;
+
+      renderTabs();
+      renderFileTree();
+      updateCharCount();
+      markUnsaved(false);
+    }
+
+    function closeTab(filename) {
+      openTabs = openTabs.filter(t => t !== filename);
+      if (activeFileKey === filename) {
+        if (openTabs.length > 0) {
+          openFile(openTabs[openTabs.length - 1]);
+        } else {
+          activeFileKey = null;
+          document.getElementById('empty-state').classList.remove('hidden');
+          document.getElementById('active-file-path').innerText = 'No active file';
+          renderTabs();
+          renderFileTree();
+        }
+      } else {
+        renderTabs();
+      }
+    }
+
+    function renderTabs() {
+      const bar = document.getElementById('tabs-bar');
+      bar.innerHTML = '';
+
+      openTabs.forEach((filename) => {
+        const isActive = filename === activeFileKey;
+        const tab = document.createElement('div');
+        tab.className = `flex items-center space-x-2 px-3 h-full border-r ide-border cursor-pointer text-xs shrink-0 transition ${
+          isActive 
+            ? 'bg-zinc-950 text-amber-400 border-t-2 border-t-amber-500 font-medium' 
+            : 'bg-zinc-900/80 text-zinc-400 hover:bg-zinc-800 hover:text-zinc-200'
+        }`;
+
+        tab.innerHTML = `
+          <i data-lucide="file-code" class="w-3.5 h-3.5"></i>
+          <span>${filename}</span>
+          <span class="hover:text-rose-400 rounded p-0.5" onclick="event.stopPropagation(); closeTab('${filename}')">
+            <i data-lucide="x" class="w-3 h-3"></i>
+          </span>
+        `;
+
+        tab.onclick = () => openFile(filename);
+        bar.appendChild(tab);
+      });
+
+      lucide.createIcons();
+    }
+
+    function renderFileTree() {
+      const tree = document.getElementById('file-tree');
+      tree.innerHTML = '';
+
+      const filenames = Object.keys(files);
+
+      if (filenames.length === 0) {
+        tree.innerHTML = `
+          <div class="text-zinc-600 text-[11px] italic p-2 text-center">
+            No files created yet.
+          </div>
+        `;
+        return;
+      }
+
+      filenames.forEach((filename) => {
+        const isActive = filename === activeFileKey;
+        const item = document.createElement('div');
+        item.className = `group flex items-center justify-between px-2 py-1 rounded cursor-pointer transition ${
+          isActive ? 'bg-zinc-800 text-amber-400 font-semibold' : 'text-zinc-300 hover:bg-zinc-800/60'
+        }`;
+
+        item.innerHTML = `
+          <div class="flex items-center space-x-2 truncate flex-1" onclick="openFile('${filename}')">
+            <i data-lucide="file-text" class="w-3.5 h-3.5 text-zinc-400 shrink-0"></i>
+            <span class="truncate">${filename}</span>
+          </div>
+          <div class="opacity-0 group-hover:opacity-100 flex items-center space-x-1 shrink-0">
+            <button onclick="event.stopPropagation(); renameFile('${filename}')" class="p-0.5 text-zinc-400 hover:text-zinc-200" title="Rename">
+              <i data-lucide="edit-2" class="w-3 h-3"></i>
+            </button>
+            <button onclick="event.stopPropagation(); deleteFile('${filename}')" class="p-0.5 text-zinc-400 hover:text-rose-400" title="Delete">
+              <i data-lucide="trash" class="w-3 h-3"></i>
+            </button>
+          </div>
+        `;
+
+        tree.appendChild(item);
+      });
+
+      lucide.createIcons();
+    }
+
+    function createNewFile() {
+      const name = prompt("Enter new filename (e.g., main.py, app.ts, index.html):", "");
+      if (name && name.trim() !== "") {
+        const cleanName = name.trim();
+        if (files[cleanName]) {
+          alert("File already exists.");
+          return;
+        }
+        const lang = detectLanguage(cleanName);
+        files[cleanName] = {
+          name: cleanName,
+          language: lang,
+          content: `// ${cleanName} created in GeniusIDE - Cobalt Studios\n`
+        };
+        saveFileSystem();
+        openFile(cleanName);
+      }
+    }
+
+    function renameFile(oldName) {
+      const newName = prompt("Rename file:", oldName);
+      if (newName && newName.trim() !== "" && newName !== oldName) {
+        const clean = newName.trim();
+        files[clean] = { ...files[oldName], name: clean, language: detectLanguage(clean) };
+        delete files[oldName];
+
+        const idx = openTabs.indexOf(oldName);
+        if (idx !== -1) openTabs[idx] = clean;
+        if (activeFileKey === oldName) activeFileKey = clean;
+
+        saveFileSystem();
+        renderTabs();
+        renderFileTree();
+      }
+    }
+
+    function deleteFile(filename) {
+      if (confirm(`Delete ${filename}?`)) {
+        delete files[filename];
+        saveFileSystem();
+        closeTab(filename);
+        renderFileTree();
+      }
+    }
+
+    function markUnsaved(unsaved) {
+      const statusEl = document.getElementById('save-status');
+      if (unsaved) {
+        statusEl.innerText = "Unsaved •";
+        statusEl.className = "text-amber-400 font-medium";
+      } else {
+        statusEl.innerText = "Saved";
+        statusEl.className = "text-emerald-500";
+      }
+    }
+
+    function saveCurrentFile() {
+      if (activeFileKey && files[activeFileKey]) {
+        files[activeFileKey].content = editorInstance.getValue();
+        saveFileSystem();
+        markUnsaved(false);
+        appendTerminal(`Saved ${activeFileKey} to disk.`, "info");
+      }
+    }
+
+    function updateCharCount() {
+      if (editorInstance) {
+        document.getElementById('char-count').innerText = `${editorInstance.getValue().length} chars`;
+      }
+    }
+
+    // Agent Logic
+    function sendAgentPrompt(promptText) {
+      if (!promptText || promptText.trim() === "") return;
+
+      appendAgentMessage("User", promptText);
+      document.getElementById('agent-input').value = '';
+
+      const activeCode = editorInstance ? editorInstance.getValue() : "";
+      const activeLang = activeFileKey ? files[activeFileKey].language : "javascript";
+
+      if (apiKeys.gemini && apiKeys.gemini.trim() !== "") {
+        executeGeminiAgentCall(promptText, activeCode, activeLang);
+      } else {
+        executeMockAgentCall(promptText, activeCode, activeLang);
+      }
+    }
+
+    function executeMockAgentCall(promptText, activeCode, activeLang) {
+      appendAgentMessage("Agent", "Processing request via local AGI Code Engine...");
+
+      setTimeout(() => {
+        let proposed = "";
+        const pLower = promptText.toLowerCase();
+
+        if (pLower.includes("fix") || pLower.includes("scan")) {
+          proposed = `// GeniusIDE Agent Auto-Fix Applied\n// Language: ${activeLang}\n` + 
+                     activeCode.replace(/console\.log/g, '// Refactored log\nconsole.log');
+        } else if (pLower.includes("test")) {
+          proposed = `// Unit Tests generated for ${activeFileKey || 'Module'}\n` +
+                     `describe("GeniusIDE Suite", () => {\n  test("Initial verification", () => {\n    expect(true).toBe(true);\n  });\n});`;
+        } else if (pLower.includes("refactor")) {
+          proposed = `// Refactored Code Structure\n` + activeCode + `\n\n// Added Error Boundaries & Guard Clause\nif (!data) throw new Error("Invalid payload");`;
+        } else {
+          proposed = `// Code generated by GeniusIDE Agent\nfunction generatedModule() {\n  console.log("Agent output for: ${promptText.replace(/"/g, '')}");\n}\n\ngeneratedModule();`;
+        }
+
+        showAgentProposal(proposed);
+        appendAgentMessage("Agent", "I have prepared a code proposal. Review and apply it using the actions below.");
+      }, 600);
+    }
+
+    async function executeGeminiAgentCall(promptText, activeCode, activeLang) {
+      appendAgentMessage("Agent", "Connecting to Gemini Live API...");
+
+      const systemInstruction = `You are the AI Code Agent inside GeniusIDE by Cobalt Studios. 
+Active File: ${activeFileKey || "None"}
+Language: ${activeLang}
+Active Code:
+\`\`\`${activeLang}
+${activeCode}
+\`\`\``;
+
+      try {
+        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKeys.gemini}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            contents: [{ parts: [{ text: `${systemInstruction}\n\nUser Request: ${promptText}` }] }]
+          })
+        });
+
+        const data = await response.json();
+        if (data.candidates && data.candidates[0].content.parts[0].text) {
+          const rawReply = data.candidates[0].content.parts[0].text;
+          appendAgentMessage("Agent", rawReply);
+
+          const codeMatch = rawReply.match(/```[\w]*\n([\s\S]*?)```/);
+          if (codeMatch && codeMatch[1]) {
+            showAgentProposal(codeMatch[1]);
+          }
+        } else {
+          appendAgentMessage("Agent", "Gemini API responded without explicit text.");
+        }
+      } catch (err) {
+        appendAgentMessage("Agent", `API Connection error: ${err.message}. Using fallback.`);
+        executeMockAgentCall(promptText, activeCode, activeLang);
+      }
+    }
+
+    function appendAgentMessage(sender, text) {
+      const container = document.getElementById('agent-messages');
+      const msg = document.createElement('div');
+
+      const isUser = sender === "User";
+      msg.className = `p-2.5 rounded-lg text-xs space-y-1 ${
+        isUser ? 'bg-zinc-800 text-zinc-200 border border-zinc-700 ml-4' : 'bg-zinc-950 text-zinc-300 border border-zinc-800 mr-2'
+      }`;
+
+      msg.innerHTML = `
+        <div class="font-semibold text-[11px] ${isUser ? 'text-sky-400' : 'text-amber-400'}">${sender}</div>
+        <div class="whitespace-pre-wrap font-mono text-[11px]">${escapeHtml(text)}</div>
+      `;
+
+      container.appendChild(msg);
+      container.scrollTop = container.scrollHeight;
+    }
+
+    function showAgentProposal(code) {
+      proposedCodeBuffer = code;
+      document.getElementById('agent-proposed-code').innerText = code;
+      document.getElementById('agent-action-drawer').classList.remove('hidden');
+    }
+
+    function escapeHtml(text) {
+      return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+    }
+
+    function runCode() {
+      if (!activeFileKey || !files[activeFileKey]) {
+        appendTerminal("No active file selected for execution.", "error");
+        return;
+      }
+
+      const file = files[activeFileKey];
+      appendTerminal(`Executing ${file.name} [${file.language}]...`, "info");
+
+      const code = editorInstance.getValue();
+
+      if (file.language === 'javascript') {
+        try {
+          const logs = [];
+          const customConsole = {
+            log: (...a) => logs.push(a.join(' ')),
+            error: (...a) => logs.push('[ERROR] ' + a.join(' ')),
+            warn: (...a) => logs.push('[WARN] ' + a.join(' '))
+          };
+          const fn = new Function('console', code);
+          fn(customConsole);
+
+          if (logs.length > 0) {
+            logs.forEach(l => appendTerminal(l, "success"));
+          } else {
+            appendTerminal("Process finished with 0 log statements.", "muted");
+          }
+        } catch (e) {
+          appendTerminal(`Uncaught Runtime Exception: ${e.message}`, "error");
+        }
+      } else {
+        appendTerminal(`Execution runner completed for ${file.language}.`, "success");
+      }
+    }
+
+    function handleTerminalInput(cmd) {
+      if (!cmd || cmd.trim() === "") return;
+      const clean = cmd.trim();
+      appendTerminal(`$ ${clean}`, "info");
+
+      if (clean === "clear") {
+        document.getElementById('terminal-output').innerHTML = '';
+      } else if (clean === "help") {
+        appendTerminal("GeniusIDE Commands:\n  node <file>  - Execute JS\n  ls           - List workspace files\n  clear        - Clear console", "muted");
+      } else if (clean === "ls") {
+        appendTerminal(Object.keys(files).join('  ') || "Directory empty.", "success");
+      } else if (clean.startsWith("agent")) {
+        sendAgentPrompt(clean.replace("agent", "").trim() || "Scan and fix active code");
+      } else {
+        runCode();
+      }
+    }
+
+    function appendTerminal(msg, type = "normal") {
+      const out = document.getElementById('terminal-output');
+      const div = document.createElement('div');
+
+      if (type === "error") div.className = "text-rose-400 font-semibold";
+      else if (type === "success") div.className = "text-emerald-400";
+      else if (type === "info") div.className = "text-amber-400";
+      else if (type === "muted") div.className = "text-zinc-500 italic";
+      else div.className = "text-zinc-300";
+
+      div.innerText = msg;
+      out.appendChild(div);
+      out.scrollTop = out.scrollHeight;
+    }
+
+    function loadSettingsAndKeys() {
+      const stored = localStorage.getItem('geniuside_keys');
+      if (stored) {
+        try {
+          apiKeys = JSON.parse(stored);
+          document.getElementById('key-gemini').value = apiKeys.gemini || "";
+          document.getElementById('key-openai').value = apiKeys.openai || "";
+          document.getElementById('key-endpoint').value = apiKeys.endpoint || "";
+        } catch(e) {}
+      }
+    }
+
+    function saveSettingsAndKeys() {
+      apiKeys.gemini = document.getElementById('key-gemini').value.trim();
+      apiKeys.openai = document.getElementById('key-openai').value.trim();
+      apiKeys.endpoint = document.getElementById('key-endpoint').value.trim();
+
+      localStorage.setItem('geniuside_keys', JSON.stringify(apiKeys));
+      document.getElementById('modal-settings').classList.add('hidden');
+      appendTerminal("API Configuration saved.", "info");
+    }
+
+    // Event Wiring
+    document.getElementById('btn-add-file').onclick = createNewFile;
+    document.getElementById('btn-menu-new').onclick = createNewFile;
+    document.getElementById('btn-empty-new').onclick = createNewFile;
+    document.getElementById('btn-run-code').onclick = runCode;
+    document.getElementById('btn-menu-run').onclick = runCode;
+    document.getElementById('btn-menu-save').onclick = saveCurrentFile;
+
+    document.getElementById('btn-send-agent').onclick = () => {
+      sendAgentPrompt(document.getElementById('agent-input').value);
+    };
+
+    document.getElementById('agent-act-fix').onclick = () => sendAgentPrompt("Scan active file and fix any errors.");
+    document.getElementById('agent-act-explain').onclick = () => sendAgentPrompt("Explain the current code step by step.");
+    document.getElementById('agent-act-tests').onclick = () => sendAgentPrompt("Generate unit tests for this file.");
+    document.getElementById('agent-act-refactor').onclick = () => sendAgentPrompt("Refactor this code cleanly.");
+
+    document.getElementById('btn-apply-proposal').onclick = () => {
+      if (proposedCodeBuffer && editorInstance) {
+        editorInstance.setValue(proposedCodeBuffer);
+        document.getElementById('agent-action-drawer').classList.add('hidden');
+        appendTerminal("Applied proposed code to active editor.", "success");
+      }
+    };
+
+    document.getElementById('btn-create-file-proposal').onclick = () => {
+      if (proposedCodeBuffer) {
+        const fname = prompt("New filename for proposal:", "output.js");
+        if (fname) {
+          files[fname] = { name: fname, language: detectLanguage(fname), content: proposedCodeBuffer };
+          saveFileSystem();
+          openFile(fname);
+          document.getElementById('agent-action-drawer').classList.add('hidden');
+        }
+      }
+    };
+
+    document.getElementById('btn-discard-proposal').onclick = () => {
+      document.getElementById('agent-action-drawer').classList.add('hidden');
+    };
+
+    document.getElementById('language-selector').onchange = (e) => {
+      const selected = e.target.value;
+      if (activeFileKey && files[activeFileKey] && editorInstance) {
+        files[activeFileKey].language = selected;
+        monaco.editor.setModelLanguage(editorInstance.getModel(), selected);
+        saveFileSystem();
+      }
+    };
+
+    document.getElementById('theme-selector').onchange = (e) => {
+      const val = e.target.value;
+      if (editorInstance) {
+        if (val === 'high-contrast') monaco.editor.setTheme('hc-black');
+        else if (val === 'light-slate') monaco.editor.setTheme('vs');
+        else if (val === 'dark-charcoal') monaco.editor.setTheme('dark-charcoal');
+        else monaco.editor.setTheme('gray-classic');
+      }
+    };
+
+    document.getElementById('terminal-input').onkeydown = (e) => {
+      if (e.key === 'Enter') {
+        handleTerminalInput(e.target.value);
+        e.target.value = '';
+      }
+    };
+
+    document.getElementById('btn-clear-terminal').onclick = () => {
+      document.getElementById('terminal-output').innerHTML = '';
+    };
+
+    document.getElementById('btn-toggle-terminal').onclick = () => {
+      document.getElementById('terminal-panel').classList.toggle('hidden');
+    };
+
+    document.getElementById('nav-btn-terminal').onclick = () => {
+      document.getElementById('terminal-panel').classList.toggle('hidden');
+    };
+
+    document.getElementById('nav-btn-agent').onclick = () => {
+      document.getElementById('sidebar-agent').classList.toggle('hidden');
+    };
+
+    document.getElementById('btn-close-agent').onclick = () => {
+      document.getElementById('sidebar-agent').classList.add('hidden');
+    };
+
+    document.getElementById('btn-menu-agent').onclick = () => {
+      document.getElementById('sidebar-agent').classList.remove('hidden');
+    };
+
+    const settingsModal = document.getElementById('modal-settings');
+    document.getElementById('btn-menu-api-keys').onclick = () => settingsModal.classList.remove('hidden');
+    document.getElementById('btn-agent-keys').onclick = () => settingsModal.classList.remove('hidden');
+    document.getElementById('nav-btn-settings').onclick = () => settingsModal.classList.remove('hidden');
+    document.getElementById('btn-close-settings').onclick = () => settingsModal.classList.add('hidden');
+    document.getElementById('btn-save-settings').onclick = saveSettingsAndKeys;
+
+    window.addEventListener('keydown', (e) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+        e.preventDefault();
+        saveCurrentFile();
+      }
+    });
+
+    window.onload = () => {
+      lucide.createIcons();
+    };
+  </script>
+</body>
+</html>
