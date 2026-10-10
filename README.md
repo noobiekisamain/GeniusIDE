@@ -1,7 +1,7 @@
 # GeniusIDE [made by cobalt studios]
 
 ![Version](https://img.shields.io/badge/version-1.0.0-blue.svg)
-![Platform](https://img.shields.io/badge/platform-Windows%20%7C%20macOS%20%7C%20Linux-lightgrey.svg)
+![Platform](https://img.shields.io/badge/platform-Windows.svg)
 ![License](https://img.shields.io/badge/license-Proprietary-red.svg)
 
 **GeniusIDE** by **Cobalt Studios** is a high-performance, lightweight Integrated Development Environment designed to streamline code editing, debugging, and project management.
