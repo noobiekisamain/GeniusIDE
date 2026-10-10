@@ -1,8 +1,4 @@
-____ _____ _   _ ___ _   _ ____ ___ ____  _____ 
-  / ___| ____| \ | |_ _| | | / ___|_ _|  _ \| ____|
- | |  _|  _| |  \| || || | | \___ \| | | | | |  _|  
- | |_| | |___| |\  || || |_| |___) | | | |_| | |___ 
-  \____|_____|_| \_|___|\___/|____/___|____/|_____|
+# GeniusIDE
                                    [Cobalt Studios]
 ![Version](https://img.shields.io/badge/version-1.0.0-blue.svg)
 ![Platform](https://img.shields.io/badge/platform-Windows%20Only-0078D6?style=flat&logo=windows&logoColor=white)
