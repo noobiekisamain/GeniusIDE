@@ -1,5 +1,15 @@
-# GeniusIDE
-                                   [Cobalt Studios]
+<div align="center">
+  <svg width="600" height="100" xmlns="http://www.w3.org/2000/svg">
+    <rect width="100%" height="100%" fill="#1e1e1e" rx="8"/>
+    <text x="50%" y="55%" font-family="'JetBrains Mono', Consolas, monospace" font-size="42" font-weight="bold" fill="#0078D6" text-anchor="middle" dominant-baseline="middle">
+      GENIUS<tspan fill="#ffffff">IDE</tspan>
+    </text>
+    <text x="50%" y="80%" font-family="'JetBrains Mono', Consolas, monospace" font-size="12" fill="#888888" text-anchor="middle">
+      Cobalt Studios
+    </text>
+  </svg>
+</div>
+
 ![Version](https://img.shields.io/badge/version-1.0.0-blue.svg)
 ![Platform](https://img.shields.io/badge/platform-Windows%20Only-0078D6?style=flat&logo=windows&logoColor=white)
 ![License](https://img.shields.io/badge/license-Proprietary-red.svg)
