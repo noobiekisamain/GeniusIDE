@@ -1,0 +1,38 @@
+{
+  "name": "geniuside",
+  "version": "1.0.0",
+  "description": "GeniusIDE by Cobalt Studios",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "dist": "electron-builder --win"
+  },
+  "build": {
+    "appId": "com.cobaltstudios.geniuside",
+    "productName": "GeniusIDE",
+    "copyright": "Copyright © 2026 Cobalt Studios",
+    "directories": {
+      "output": "dist"
+    },
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": ["x64"]
+        },
+        {
+          "target": "portable",
+          "arch": ["x64"]
+        }
+      ],
+      "icon": "assets/icon.ico"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true
+    }
+  },
+  "author": "Cobalt Studios",
+  "license": "Proprietary"
+}
