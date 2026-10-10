@@ -43,7 +43,7 @@
 * **Permitted:** Installing and running GeniusIDE for personal, educational, or commercial software development.
 * **Prohibited:** Modifying, decompiling, reverse engineering, disassembling, or redistributing GeniusIDE binaries or assets.
 
-For full terms and conditions, refer to [LICENSE.md](./LICENSE.md).
+For full terms and conditions, refer to [LICENSE.md](./LICENSE).
 
 ---
 
