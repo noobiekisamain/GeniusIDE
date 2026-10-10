@@ -1,3 +1,5 @@
+# EULA
+
 END-USER LICENSE AGREEMENT (EULA)
 
 Last Updated: October 10, 2026
