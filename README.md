@@ -1,4 +1,9 @@
-# GeniusIDE [made by cobalt studios]
+██████╗ ███████╗███╗   ██╗██╗   ██╗██╗███████╗██╗██████╗ ███████╗
+ ██╔════╝ ██╔════╝████╗  ██║██║   ██║██║██╔════╝██║██╔══██╗██╔════╝
+ ██║  ███╗█████╗  ██╔██╗ ██║██║   ██║██║███████╗██║██║  ██║█████╗  
+ ██║   ██║██╔══╝  ██║╚██╗██║██║   ██║██║╚════██║██║██║  ██║██╔══╝  
+ ╚██████╔╝███████╗██║ ╚████║╚██████╔╝██║███████║██║██████╔╝███████╗
+                                              [Cobalt Studios]
 
 ![Version](https://img.shields.io/badge/version-1.0.0-blue.svg)
 ![Platform](https://img.shields.io/badge/platform-Windows%20Only-0078D6?style=flat&logo=windows&logoColor=white)
